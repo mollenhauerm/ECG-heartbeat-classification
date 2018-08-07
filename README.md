@@ -54,9 +54,9 @@ plot(x_train, y_train)
 ![png](img/output_5_0.png)
 
 
-Lets have a look at the data. We have $\sim 80k$ samples of one-beat ECG cycles. Each sample is a $[0,1]$ interval normalized timeseries padded with zeros at the end to fit a unified timeframe.
+Lets have a look at the data. We have 80k samples of one-beat ECG cycles. Each sample is a [0,1] interval normalized timeseries padded with zeros at the end to fit a unified timeframe.
 
-Lets try to understand our target variable. We have a $5$-class with a heavily oversampled "0"-class. This means, that we have to account for the underrepresented classes with a weight in the loss function later on. Else, the model might classify everything a "0" and still perform well, but this is obviously not what we want.
+Lets try to understand our target variable. We have a 5-class problem with a heavily oversampled "0"-class. This means, that we have to account for the underrepresented classes with a weight in the loss function later on. Else, the model might classify everything a "0" and still perform well, but this is obviously not what we want.
 The class encoding has the following meaning:
 
 | class |heart condition |
@@ -83,13 +83,18 @@ y_train.value_counts().plot(kind="bar")
 ![png](img/output_8_1.png)
 
 
-### Preprocessing
+### A first naive preprocessing approach
 
-Since we already have a lot of padded zeros in our data, it is only fair to make use of sparse matrices in the end by setting a threshold for our signal. Furthermore, we can add additional information by taking the magnitude of the dicrete signal gradients into account.
+Since we already have a lot of padded zeros in our data, it is only fair to make use of sparse matrices in the end by 
+setting a threshold for our signal. Furthermore, we can add additional information by taking the magnitude of the 
+dicrete signal gradients into account. For a first test, we will treat the signals as static points in feature space 
+without any interpretation of the semantic meaning by consecutive values in a sample with respect to the time axis.
+This is justified by the fact, that the signals are already normalized and padded.
 
-We can also try to add manual convolution, for example with a discrete gaussian. Similarly, we can incorporate manual max pooling by using the```pd.DataFrame.rolling``` function.
 
-Additionally, we downsample our signal by using ```scipy.signal.decimate```-
+We could also try to add manual convolution, for example with a discrete gaussian. Similarly, we can incorporate manual max pooling by using the```pd.DataFrame.rolling``` function.
+
+Additionally, we downsample our signal by using ```scipy.signal.decimate```.
 
 
 ```python
@@ -148,12 +153,13 @@ x_preprocessed = csr_matrix(x_train_preprocessed)
 ![png](img/output_14_0.png)
 
 
-### Fitting a Scikit-lean benchmark model
+### Fitting a simple Scikit-learn benchmark model
 
-For a first intuition, we fit a logistic regression with a one-versus-rest approach for multilabel classification. We use the standard Newton conjugate gradient solver and add class weights according to the number of samples in the data to the loss function.
+For a first intuition, we fit a logistic regression with a one-versus-rest approach for multilabel classification. We 
+use the standard Newton conjugate gradient solver and add class weights according to the number of samples in the data 
+to the loss function.
 
-We regularize the loss with standard $L2$ penalty.
-
+We regularize the loss with standard L2 penalty. 
 
 ```python
 from sklearn.linear_model import LogisticRegression
